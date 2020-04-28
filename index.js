@@ -6,12 +6,11 @@ const redis = require('redis')
 require('dotenv').config();
 const PORT = process.env.PORT || 5000
 const redisClient = redis.createClient();
-const pk = Buffer.from(process.env.NEXMO_APPLICATION_PRIVATE_KEY.replace(/\\n/g,"\n"),'utf-8')
 const nexmo = new Nexmo({
   apiKey: process.env.NEXMO_API_KEY,
   apiSecret: process.env.NEXMO_API_SECRET,
   applicationId: process.env.NEXMO_APPLICATION_ID,
-  privateKey: pk
+  privateKey: Buffer.from(process.env.NEXMO_APPLICATION_PRIVATE_KEY.replace(/\\n/g, "\n"), 'utf-8')
 },{
   apiHost:'messages-sandbox.nexmo.com'
 }
