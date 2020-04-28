@@ -11,7 +11,7 @@ const nexmo = new Nexmo({
   apiKey: process.env.NEXMO_API_KEY,
   apiSecret: process.env.NEXMO_API_SECRET,
   applicationId: process.env.NEXMO_APPLICATION_ID,
-  privateKey: process.env.NEXMO_APPLICATION_PRIVATE_KEY
+  privateKey: Buffer.from(process.env.NEXMO_APPLICATION_PRIVATE_KEY.replace(/\\n/g, "\n"), 'utf-8')
 },{
   apiHost:'messages-sandbox.nexmo.com'
 }
