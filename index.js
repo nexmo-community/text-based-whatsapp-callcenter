@@ -16,10 +16,14 @@ const nexmo = new Nexmo({
 }
 );
 const agentNum = process.env.AGENT_NUM
+const agentNum2 = process.env.AGENT_NUM2
 // for the moment agent's must be pre-seeded
 if(agentNum)
 {
   redisClient.hmset(agentNum, 'name', "fred", "type","agent", "availability", "unavailable")
+}
+if (agentNum2){
+  redisClient.hmset(agentNum2, 'name', "sam", "type","agent", "availability", "unavailable")
 }
 
 const emojis = ['🏠','🍎','🥑']
@@ -67,17 +71,19 @@ function handleInbound(request, response) {
           }
           if(reply){
             var charPoint = parseInt(reply.codePointAt(reply.length-2).toString('16'),16)
+            agentNumber = reply.substring(0,reply.length-2)
             var emoji = String.fromCodePoint(charPoint)  
             
-            redisClient.hmset(fromNumber, "proxyNumber", toNumber, "channel", channel, 'agent', reply, 'type', 'customer', 'emoji', emoji);
-            handleInboundFromCustomer(agentNum, body, emoji);
+            redisClient.hmset(fromNumber, "proxyNumber", toNumber, "channel", channel, 'agent', reply, 'type', 'customer', 'emoji', emoji, 'agentNum', agentNumber);
+            handleInboundFromCustomer(agentNumber, body, emoji);
             redisClient.set(reply, fromNumber);
           }
         })        
       }
       else{
         if(user['type'] == 'customer'){
-          handleInboundFromCustomer(agentNum, body, user['emoji'])
+          
+          handleInboundFromCustomer(user['agentNumber'], body, user['emoji'])
         }
         else{
           handleInboundFromAgent(body)
@@ -148,33 +154,33 @@ already signed in, if not it set's agent's status to 'available' and
 */
 function handleSignIn(agentNumber, from){
   let message = {"type":"text","text":"something went wrong while signing you in"}
-  redisClient.hgetall(agentNum,(err,reply)=>{
+  redisClient.hgetall(agentNumber,(err,reply)=>{
     if (err){
       console.log(err)      
     }
     else{
       if(!reply || reply['availability'] == 'unavailable'){
         emojis.forEach((entry)=>{
-          redisClient.lpush('available',agentNum+entry)
+          redisClient.lpush('available',agentNumber+entry)
         });
-        redisClient.hset(agentNum, "availability","available");
+        redisClient.hset(agentNumber, "availability","available");
         message = {"type":"text","text":"You have been signed in"}
       }
       else{
         message = {"type":"text","text":"You were already signed in"}
       }
     }
-    sendWhatsappMessage(from,agentNum,message);
+    sendWhatsappMessage(from,agentNumber,message);
   })
 }
 
 function handleSignOut(agentNumber, from){
   emojis.forEach((entry)=>{
-    redisClient.lrem('available',1,agentNum+entry);
+    redisClient.lrem('available',1,agentNumber+entry);
   });
-  redisClient.hset(agentNum, "availability", "unavailable")
+  redisClient.hset(agentNumber, "availability", "unavailable")
   message = {"type":"text","text":"You have been signed out"}
-  sendWhatsappMessage(from,agentNum,message);
+  sendWhatsappMessage(from,agentNumber,message);
 }
 
 
