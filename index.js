@@ -65,7 +65,7 @@ function handleInbound(request, response) {
     }
     else{      
       if(!user){        
-        redisClient.lpop('available',(err,reply)=>{
+        redisClient.spop('available',(err,reply)=>{
           if(err){
             console.log(err)
           }
@@ -161,7 +161,7 @@ function handleSignIn(agentNumber, from){
     else{
       if(!reply || reply['availability'] == 'unavailable'){
         emojis.forEach((entry)=>{
-          redisClient.lpush('available',agentNumber+entry)
+          redisClient.sadd('available',agentNumber+entry)
         });
         redisClient.hset(agentNumber, "availability","available");
         message = {"type":"text","text":"You have been signed in"}
@@ -176,7 +176,7 @@ function handleSignIn(agentNumber, from){
 
 function handleSignOut(agentNumber, from){
   emojis.forEach((entry)=>{
-    redisClient.lrem('available',1,agentNumber+entry);
+    redisClient.srem('available',1,agentNumber+entry);
   });
   redisClient.hset(agentNumber, "availability", "unavailable")
   message = {"type":"text","text":"You have been signed out"}
