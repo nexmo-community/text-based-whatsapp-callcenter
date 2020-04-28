@@ -17,6 +17,8 @@ const nexmo = new Nexmo({
 );
 const agentNum = process.env.AGENT_NUM
 const agentNum2 = process.env.AGENT_NUM2
+
+const CUSTOMERS = '_customers';
 // for the moment agent's must be pre-seeded
 if(agentNum)
 {
@@ -64,7 +66,7 @@ function handleInbound(request, response) {
       console.log(err)
     }
     else{      
-      if(!user){        
+      if(!user || (!user['agentNum'] && user['type'] == 'customer')){        
         redisClient.spop('available',(err,reply)=>{
           if(err){
             console.log(err)
@@ -75,15 +77,20 @@ function handleInbound(request, response) {
             var emoji = String.fromCodePoint(charPoint)  
             
             redisClient.hmset(fromNumber, "proxyNumber", toNumber, "channel", channel, 'agent', reply, 'type', 'customer', 'emoji', emoji, 'agentNum', agentNumber);
+            redisClient.sadd(agentNumber+CUSTOMERS,fromNumber);
             handleInboundFromCustomer(agentNumber, body, emoji);
             redisClient.set(reply, fromNumber);
+          }
+          else{
+            let message = {type:"text", text:"We're sorry, no agent's are available at this time. Please try again later"};
+            sendWhatsappMessage(toNumber, fromNumber, message);          
           }
         })        
       }
       else{
         if(user['type'] == 'customer'){
           
-          handleInboundFromCustomer(user['agentNumber'], body, user['emoji'])
+          handleInboundFromCustomer(user['agentNum'], body, user['emoji'])
         }
         else{
           handleInboundFromAgent(body)
@@ -179,10 +186,61 @@ function handleSignOut(agentNumber, from){
     redisClient.srem('available',1,agentNumber+entry);
   });
   redisClient.hset(agentNumber, "availability", "unavailable")
+
+  redisClient.smembers(agentNumber+CUSTOMERS, (err,reply)=>{
+    if (err){
+      console.log(err)
+    }
+    else{      
+      reply.forEach((entry)=>{
+        reassignAgent(entry)
+      })
+      redisClient.del(agentNumber+CUSTOMERS)
+    }
+  })
+
   message = {"type":"text","text":"You have been signed out"}
   sendWhatsappMessage(from,agentNumber,message);
 }
 
+function reassignAgent(customerNumber){
+  redisClient.spop('available',(err,reply)=>{
+    if(err){
+      console.log(err)
+    }
+    else if(reply){
+      var charPoint = parseInt(reply.codePointAt(reply.length-2).toString('16'),16)
+      agentNumber = reply.substring(0,reply.length-2)
+      var emoji = String.fromCodePoint(charPoint)
+      redisClient.hmset(customerNumber, 'agent', reply, 'emoji', emoji, 'agentNum', agentNumber);
+      redisClient.sadd(agentNumber+CUSTOMERS,customerNumber);
+      redisClient.set(reply, customerNumber);
+      redisClient.hgetall(customerNumber, (err,user)=>{
+        if(err){
+          console.log(err)
+        }
+        else{
+          proxyNumber = user['proxyNumber']
+          let body = {"type":"text", "text":emoji+" - You have been assigned a new case"};
+          sendWhatsappMessage(proxyNumber, agentNumber, body);
+        }      
+      })
+    }
+    else{
+      redisClient.hmset(customerNumber, 'agent', '', 'emoji', '', 'agentNum', '');
+      let body = {"type":"text", "text":"We're sorry, there are no available agents at this time, please try again later"};
+      redisClient.hgetall(customerNumber, (err,user)=>{
+        if(err){
+          console.log(err)
+        }
+        else{
+          proxyNumber = user['proxyNumber']          
+          sendWhatsappMessage(proxyNumber, customerNumber, body);
+        }      
+      })
+    }    
+  })
+}
 
 function sendWhatsappMessage(from, to, message){  
   nexmo.channel.send(
