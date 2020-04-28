@@ -5,7 +5,7 @@ const path = require('path')
 const redis = require('redis')
 require('dotenv').config();
 const PORT = process.env.PORT || 5000
-const redisClient = redis.createClient();
+const redisClient = redis.createClient(process.env.REDIS_URL);
 const nexmo = new Nexmo({
   apiKey: process.env.NEXMO_API_KEY,
   apiSecret: process.env.NEXMO_API_SECRET,
@@ -65,7 +65,7 @@ function handleInbound(request, response) {
     }
     else{      
       if(!user){        
-        redisClient.lpop("available",(err,reply)=>{
+        redisClient.lpop('available',(err,reply)=>{
           if(err){
             console.log(err)
           }
@@ -150,7 +150,7 @@ function handleInboundFromAgent(messageBody){
 
 /*
 Checks if agent is already available, if you they are, then it tells you the agent they've 
-already signed in, if not it set's agent's status to 'available' and 
+already signed in, if not it set's agent's status to available and 
 */
 function handleSignIn(agentNumber, from){
   let message = {"type":"text","text":"something went wrong while signing you in"}
