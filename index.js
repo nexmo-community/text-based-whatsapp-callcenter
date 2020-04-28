@@ -83,7 +83,7 @@ function handleInbound(request, response) {
           }
           else{
             let message = {type:"text", text:"We're sorry, no agent's are available at this time. Please try again later"};
-            sendWhatsappMessage(toNumber, fromNumber, message);          
+            sendWhatsAppMessage(toNumber, fromNumber, message);          
           }
         })        
       }
@@ -112,7 +112,7 @@ function handleInbound(request, response) {
 function handleInboundFromCustomer(agentNumber, messageBody, emoji){
   let fromNumber = messageBody['to']['number']
   messageBody['message']['content']['text'] = emoji + " - " + messageBody['message']['content']['text']
-  sendWhatsappMessage(fromNumber, agentNumber, messageBody['message']['content'])
+  sendWhatsAppMessage(fromNumber, agentNumber, messageBody['message']['content'])
 }
 
 /**
@@ -145,7 +145,7 @@ function handleInboundFromAgent(messageBody){
       }
       else{
         if(number){
-          sendWhatsappMessage(messageBody['to']['number'], number, messageBody['message']['content'])
+          sendWhatsAppMessage(messageBody['to']['number'], number, messageBody['message']['content'])
         }
         else{
           console.log('number not found for ' + emoji)
@@ -177,7 +177,7 @@ function handleSignIn(agentNumber, from){
         message = {"type":"text","text":"You were already signed in"}
       }
     }
-    sendWhatsappMessage(from,agentNumber,message);
+    sendWhatsAppMessage(from,agentNumber,message);
   })
 }
 
@@ -200,7 +200,7 @@ function handleSignOut(agentNumber, from){
   })
 
   message = {"type":"text","text":"You have been signed out"}
-  sendWhatsappMessage(from,agentNumber,message);
+  sendWhatsAppMessage(from,agentNumber,message);
 }
 
 function reassignAgent(customerNumber){
@@ -222,7 +222,7 @@ function reassignAgent(customerNumber){
         else{
           proxyNumber = user['proxyNumber']
           let body = {"type":"text", "text":emoji+" - You have been assigned a new case"};
-          sendWhatsappMessage(proxyNumber, agentNumber, body);
+          sendWhatsAppMessage(proxyNumber, agentNumber, body);
         }      
       })
     }
@@ -235,14 +235,14 @@ function reassignAgent(customerNumber){
         }
         else{
           proxyNumber = user['proxyNumber']          
-          sendWhatsappMessage(proxyNumber, customerNumber, body);
+          sendWhatsAppMessage(proxyNumber, customerNumber, body);
         }      
       })
     }    
   })
 }
 
-function sendWhatsappMessage(from, to, message){  
+function sendWhatsAppMessage(from, to, message){  
   nexmo.channel.send(
     { "type": "whatsapp", "number": to },
     { "type": "whatsapp", "number": from },
