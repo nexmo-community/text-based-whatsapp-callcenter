@@ -137,14 +137,7 @@ function handleInboundFromAgent(messageBody){
   }
   else{
     var charPoint = parseInt(msgText.codePointAt(0).toString('16'),16)
-    var emoji = String.fromCodePoint(charPoint)    
-
-    // check if we recognise the emoji, if not, reply to the agent and stop
-    if (!emojis.includes(emoji)) {
-      var message = {"type":"text","text": "please check your message has the correct emoji at the start"};
-      sendWhatsAppMessage(messageBody['to']['number'], messageBody['from']['number'],message);
-      return;
-    }
+    var emoji = String.fromCodePoint(charPoint)
     
     messageBody['message']['content']['text'] = messageBody['message']['content']['text'].substring(2).trim();
     redisClient.get(messageBody['from']['number']+emoji, (err,number)=>{
@@ -152,12 +145,16 @@ function handleInboundFromAgent(messageBody){
         console.log(err);
       }
       else{
+        // check if agent is associated with the emoji in question, tell them to check their emoji if not
         if(number){
           sendWhatsAppMessage(messageBody['to']['number'], number, messageBody['message']['content'])
         }
         else{
           console.log('number not found for ' + emoji)
-        }      
+          var message = {"type":"text","text": "please check your message has the correct emoji at the start"};
+          sendWhatsAppMessage(messageBody['to']['number'], messageBody['from']['number'],message);
+          return;
+        }
       }
     })
   }  
