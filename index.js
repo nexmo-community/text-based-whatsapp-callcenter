@@ -22,10 +22,10 @@ const CUSTOMERS = '_customers';
 // for the moment agent's must be pre-seeded
 if(agentNum)
 {
-  redisClient.hmset(agentNum, 'name', "fred", "type","agent", "availability", "unavailable")
+  redisClient.hmset('agents:' + agentNum, "availability", "unavailable")
 }
 if (agentNum2){
-  redisClient.hmset(agentNum2, 'name', "sam", "type","agent", "availability", "unavailable")
+  redisClient.hmset('agents:' + agentNum2, "availability", "unavailable")
 }
 
 const emojis = ['🏠','🍎','🥑', '🌳', '🎪','🌈']
@@ -59,14 +59,41 @@ app
 function handleInbound(request, response) {
   var body = request.body
   let fromNumber = body['from']['number']
-  let toNumber = body['to']['number']
-  let channel = body['to']['type']
-  redisClient.hgetall(fromNumber, (err,user)=>{
+  redisClient.hgetall('agents:'+fromNumber, (err,agent)=>{
+    if(err){
+      console.log(err)
+    }
+    else{
+      if(agent){
+        handleInboundFromAgent(body)
+      }
+      else{
+        handleInboundFromCustomer(body)
+      }
+    }
+  })
+
+  const params = Object.assign(request.query, request.body)
+  console.log(params)
+  response.status(204).send()
+};
+
+/**
+ * creates a customer if they don' already exist for the incoming number. sends a whatsapp message
+ * to agent with prepended emoji
+ * @param {Body of the incoming http message to the webhook} messageBody string 
+ */
+function handleInboundFromCustomer(messageBody){
+  let fromNumber = messageBody['from']['number']
+  let toNumber = messageBody['to']['number']
+  let agentNumber = '';
+  let emoji = '';
+  redisClient.hgetall('customers:' + fromNumber, (err,user)=>{
     if(err){
       console.log(err)
     }
     else{      
-      if(!user || (!user['agentNum'] && user['type'] == 'customer')){        
+      if(!user){
         redisClient.spop('available',(err,reply)=>{
           if(err){
             console.log(err)
@@ -76,10 +103,11 @@ function handleInbound(request, response) {
             agentNumber = reply.substring(0,reply.length-2)
             var emoji = String.fromCodePoint(charPoint)  
             
-            redisClient.hmset(fromNumber, "proxyNumber", toNumber, "channel", channel, 'agent', reply, 'type', 'customer', 'emoji', emoji, 'agentNum', agentNumber);
+            redisClient.hmset('customers:' + fromNumber, "proxyNumber", toNumber, 'agent', reply, 'emoji', emoji, 'agentNum', agentNumber);
             redisClient.sadd(agentNumber+CUSTOMERS,fromNumber);
-            handleInboundFromCustomer(agentNumber, body, emoji);
             redisClient.set(reply, fromNumber);
+            messageBody['message']['content']['text'] = emoji + " - " + messageBody['message']['content']['text']
+            sendWhatsAppMessage(toNumber, agentNumber, messageBody['message']['content'])
           }
           else{
             let message = {type:"text", text:"We're sorry, no agents are available at this time. Please try again later"};
@@ -88,32 +116,13 @@ function handleInbound(request, response) {
         })        
       }
       else{
-        if(user['type'] == 'customer'){
-          
-          handleInboundFromCustomer(user['agentNum'], body, user['emoji'])
-        }
-        else{
-          handleInboundFromAgent(body)
-        }
+        messageBody['message']['content']['text'] = user['emoji'] + " - " + messageBody['message']['content']['text']
+        sendWhatsAppMessage(toNumber, user['agentNum'], messageBody['message']['content'])
       }      
     }
-  }) 
-  const params = Object.assign(request.query, request.body)
-  console.log(params)
-  response.status(204).send()
-};
-
-/**
- * prepends '<emoji> - ' to the text of the message's content, then forwards that message onto the user
- * @param {number of the agent handling the customer} agentNumber string
- * @param {json payload of the message} messageBody object
- * @param {the emoji being used for this customer} emoji 
- */
-function handleInboundFromCustomer(agentNumber, messageBody, emoji){
-  let fromNumber = messageBody['to']['number']
-  messageBody['message']['content']['text'] = emoji + " - " + messageBody['message']['content']['text']
-  sendWhatsAppMessage(fromNumber, agentNumber, messageBody['message']['content'])
+  })
 }
+
 
 /**
  * this handles inbound messages from agent's
@@ -138,7 +147,7 @@ function handleInboundFromAgent(messageBody){
   else{
     var charPoint = parseInt(msgText.codePointAt(0).toString('16'),16)
     var emoji = String.fromCodePoint(charPoint)
-    
+
     messageBody['message']['content']['text'] = messageBody['message']['content']['text'].substring(2).trim();
     redisClient.get(messageBody['from']['number']+emoji, (err,number)=>{
       if(err){
@@ -166,7 +175,7 @@ already signed in, if not it set's agent's status to available and
 */
 function handleSignIn(agentNumber, from){
   let message = {"type":"text","text":"something went wrong while signing you in"}
-  redisClient.hgetall(agentNumber,(err,reply)=>{
+  redisClient.hgetall("agents:" + agentNumber,(err,reply)=>{
     if (err){
       console.log(err)      
     }
@@ -175,7 +184,7 @@ function handleSignIn(agentNumber, from){
         emojis.forEach((entry)=>{
           redisClient.sadd('available',agentNumber+entry)
         });
-        redisClient.hset(agentNumber, "availability","available");
+        redisClient.hset("agents:" + agentNumber, "availability","available");
         message = {"type":"text","text":"You have been signed in. Reply to customers using their emoji prefix at the start of your message"}
       }
       else{
@@ -190,7 +199,7 @@ function handleSignOut(agentNumber, from){
   emojis.forEach((entry)=>{
     redisClient.srem('available',1,agentNumber+entry);
   });
-  redisClient.hset(agentNumber, "availability", "unavailable")
+  redisClient.hset("agents:" + agentNumber, "availability", "unavailable")
 
   redisClient.smembers(agentNumber+CUSTOMERS, (err,reply)=>{
     if (err){
@@ -217,10 +226,10 @@ function reassignAgent(customerNumber){
       var charPoint = parseInt(reply.codePointAt(reply.length-2).toString('16'),16)
       agentNumber = reply.substring(0,reply.length-2)
       var emoji = String.fromCodePoint(charPoint)
-      redisClient.hmset(customerNumber, 'agent', reply, 'emoji', emoji, 'agentNum', agentNumber);
+      redisClient.hmset("customers:" + customerNumber, 'agent', reply, 'emoji', emoji, 'agentNum', agentNumber);
       redisClient.sadd(agentNumber+CUSTOMERS,customerNumber);
       redisClient.set(reply, customerNumber);
-      redisClient.hgetall(customerNumber, (err,user)=>{
+      redisClient.hgetall("customers:" + customerNumber, (err,user)=>{
         if(err){
           console.log(err)
         }
@@ -232,9 +241,9 @@ function reassignAgent(customerNumber){
       })
     }
     else{
-      redisClient.hmset(customerNumber, 'agent', '', 'emoji', '', 'agentNum', '');
+      redisClient.hmset("customers:" + customerNumber, 'agent', '', 'emoji', '', 'agentNum', '');
       let body = {"type":"text", "text":"We're sorry, there are no available agents at this time, please try again later"};
-      redisClient.hgetall(customerNumber, (err,user)=>{
+      redisClient.hgetall("customers:" + customerNumber, (err,user)=>{
         if(err){
           console.log(err)
         }
