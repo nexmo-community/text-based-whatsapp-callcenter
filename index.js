@@ -28,7 +28,7 @@ if (agentNum2){
   redisClient.hmset(agentNum2, 'name', "sam", "type","agent", "availability", "unavailable")
 }
 
-const emojis = ['🏠','🍎','🥑']
+const emojis = ['🏠','🍎','🥑', '🌳', '🎪','🌈']
 
 const app = express()
 
@@ -82,7 +82,7 @@ function handleInbound(request, response) {
             redisClient.set(reply, fromNumber);
           }
           else{
-            let message = {type:"text", text:"We're sorry, no agent's are available at this time. Please try again later"};
+            let message = {type:"text", text:"We're sorry, no agents are available at this time. Please try again later"};
             sendWhatsAppMessage(toNumber, fromNumber, message);          
           }
         })        
@@ -137,19 +137,24 @@ function handleInboundFromAgent(messageBody){
   }
   else{
     var charPoint = parseInt(msgText.codePointAt(0).toString('16'),16)
-    var emoji = String.fromCodePoint(charPoint)    
-    messageBody['message']['content']['text'] = messageBody['message']['content']['text'].substring(4);
+    var emoji = String.fromCodePoint(charPoint)
+    
+    messageBody['message']['content']['text'] = messageBody['message']['content']['text'].substring(2).trim();
     redisClient.get(messageBody['from']['number']+emoji, (err,number)=>{
       if(err){
         console.log(err);
       }
       else{
+        // check if agent is associated with the emoji in question, tell them to check their emoji if not
         if(number){
           sendWhatsAppMessage(messageBody['to']['number'], number, messageBody['message']['content'])
         }
         else{
           console.log('number not found for ' + emoji)
-        }      
+          var message = {"type":"text","text": "please check your message has the correct emoji at the start"};
+          sendWhatsAppMessage(messageBody['to']['number'], messageBody['from']['number'],message);
+          return;
+        }
       }
     })
   }  
@@ -171,7 +176,7 @@ function handleSignIn(agentNumber, from){
           redisClient.sadd('available',agentNumber+entry)
         });
         redisClient.hset(agentNumber, "availability","available");
-        message = {"type":"text","text":"You have been signed in"}
+        message = {"type":"text","text":"You have been signed in. Reply to customers using their emoji prefix at the start of your message"}
       }
       else{
         message = {"type":"text","text":"You were already signed in"}
@@ -199,7 +204,7 @@ function handleSignOut(agentNumber, from){
     }
   })
 
-  message = {"type":"text","text":"You have been signed out"}
+  message = {"type":"text","text":"You have been signed out. Thanks for your hard work!"}
   sendWhatsAppMessage(from,agentNumber,message);
 }
 
