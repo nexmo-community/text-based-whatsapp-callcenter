@@ -43,15 +43,25 @@ app
   .route('/webhooks/inbound')
   .get(handleInbound)
   .post(handleInbound);
+  
+app
+  .route('/webhooks/inbound-wa')
+  .get(handleInbound)
+  .post(handleInbound);
 
 app
   .route('/webhooks/status')
   .get(handleStatus)
   .post(handleStatus);
 
+app
+  .route('/webhooks/msg-event')
+  .get(handleStatus)
+  .post(handleStatus);
+
 /**
  * This looks to see if there is already a user record for the from number
- * if not - create a new Customer user object (consequentially agent's must be pre-seeded)
+ * if not - create a new Customer user object (consequentially agents must be pre-seeded)
  * if a user exists for that number check if it's a customer or agent and handle appropriately
  * @param {http request from the webhook} request 
  * @param {response to be sent back to the webhook} response 
@@ -79,8 +89,8 @@ function handleInbound(request, response) {
 };
 
 /**
- * creates a customer if they don' already exist for the incoming number. sends a whatsapp message
- * to agent with prepended emoji
+ * Creates a customer if we don't already have a record for the incoming number.
+ * Sends the customer's message to the agent with prepended emoji
  * @param {Body of the incoming http message to the webhook} messageBody string 
  */
 function handleInboundFromCustomer(messageBody){
@@ -106,6 +116,7 @@ function handleInboundFromCustomer(messageBody){
             redisClient.hmset('customers:' + fromNumber, "proxyNumber", toNumber, 'agent', reply, 'emoji', emoji, 'agentNum', agentNumber);
             redisClient.sadd(agentNumber+CUSTOMERS,fromNumber);
             redisClient.set(reply, fromNumber);
+            console.log("***REPLY**: " + reply)
             messageBody['message']['content']['text'] = emoji + " - " + messageBody['message']['content']['text']
             sendWhatsAppMessage(toNumber, agentNumber, messageBody['message']['content'])
           }
@@ -125,15 +136,11 @@ function handleInboundFromCustomer(messageBody){
 
 
 /**
- * this handles inbound messages from agent's
- * it assumes that the message will be in the format 
- *  1:'<emoji> - message'
- *  2:'sign in'
- *  3:'sign out'
- * if it's a sign in, it executes the signIn method, same with sign out
- * otherwise it grabs the first character (assumed to be a utf-32 emoji)
- * appends that emoji to the end of the agent's name and uses that composite as the hash
- * for redis, using all of this it then forwards on the message to the desired number
+ * This handles inbound messages from agents
+ * The message is expected to be one of these formats: 
+ *  1:'<emoji> message' - looks up which user has this emoji and forwards the msg
+ *  2:'sign in' - calls signIn
+ *  3:'sign out' - calls signOut
  * @param {this is the body from the inbound whatsApp message} messageBody  
  */
 function handleInboundFromAgent(messageBody){
@@ -170,8 +177,8 @@ function handleInboundFromAgent(messageBody){
 }
 
 /*
-Checks if agent is already available, if you they are, then it tells you the agent they've 
-already signed in, if not it set's agent's status to available and 
+Checks if agent is already available, if they are, then it tells the agent they've 
+already signed in, if not it sets agent's status to available
 */
 function handleSignIn(agentNumber, from){
   let message = {"type":"text","text":"something went wrong while signing you in"}
