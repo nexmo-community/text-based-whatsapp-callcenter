@@ -1,7 +1,41 @@
 tr:nth-child(even) {
     background-color: #f2f2f2;
   }
+  tr:nth-child(odd){
+    background-color: white;
+  }
 
   table, th, td {
-    border: 1px solid black;
+    border: .5px solid black;
+    text-align: center;
   }
+  table th{
+    padding:10px
+  }
+
+  table tr{
+    padding: 5px
+  }
+header, form, div, h2{
+  max-width: 750px;
+  margin: auto;
+  text-align: center;
+}
+
+h2{
+  padding-top: 10px;
+  padding-bottom: 10px;
+  text-align: center;
+}
+table{
+  text-align:  center;
+  margin-left: auto;
+  margin-right: auto;
+}
+input{
+  text-align: center;
+  margin-top: 20px;
+}
+body{
+  background-color: rgb(156, 119, 156);
+}

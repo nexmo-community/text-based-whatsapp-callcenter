@@ -56,7 +56,10 @@ app.route('/addAgent')
 app.route('/getAgents')
   .get(getAgents);
 
-function addAgent(request, response){
+app.route('/getCustomers')
+  .get(getCustomers);
+
+  function addAgent(request, response){
   let agentName = request.body['agentName'];
   let agentNumber = request.body['agentNum'];
   redisClient.hmset('agents:' + agentNumber, 'agentName', agentName, "availability", "unavailable", 'agentNumber', agentNumber)
@@ -86,6 +89,25 @@ async function getAgents(request, response){
   response.json(ret);  
 }
 
+async function getCustomers(req,resp){
+  let ret = [];
+  let customers = [];
+  await redisClient.keysAsync("customers:*").then(function(theCustomers){
+    customers = theCustomers;
+  }).catch(function(e){
+    console.log(e);
+  });
+  
+  for(i = 0; i < customers.length; i++){
+    entry = customers[i];
+    await redisClient.hgetallAsync(entry).then(function(customer){
+      if(customer['agentNum']!=''){
+        ret.push({assignedAgentNum:customer['agentNum'], emoji:customer['emoji'], customerNumber:entry.split(':')[1]});
+      }        
+    })
+  }
+  resp.json(ret);
+}
 /**
  * This looks to see if there is already a user record for the from number
  * if not - create a new Customer user object (consequentially agents must be pre-seeded)

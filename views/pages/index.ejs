@@ -3,18 +3,22 @@
 <head>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="/js/main.js"></script>  
-  <link rel="stylesheet" type="text/css" href="/stylesheets/styles.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/styles.css">  
 </head>
 
 <body>
-  <h1>WhatsApp Contact Center Dashboard</h1>
+  <header>
+    <h1>WhatsApp Contact Center Dashboard</h1>
+  </header>
+  
   <h2>Add A new Agent</h2>
   <form name="agentForm" action="/addAgent" method="POST">
     <input type="text" name="agentNum" id="agentNum" placeholder="Agent Number">
     <input type="text" name="agentName" id="agentName" placeholder="Agent Name">
-    <input type="submit" value="Add">
+    <br/>
+    <input type="submit" value="Add Agent">
   </form>
-  <h2>Registered Agents</h2>
+  <h2>Currently Registered Agents</h2>
   <div style="overflow-y: auto;">
     <table id="agentTable">
       <thead>
@@ -25,10 +29,23 @@
       </tr>
       </thead>
       <tbody>
-
-      </tbody>
-      
+      </tbody>      
     </table>
+</div>
+<h2>Customers Currently Being Helped</h2>
+<div style="overflow-y: auto;">
+  <table id="customersTable">
+    <thead>
+      <tr>
+        <th>Agent Number</th>
+        <th>Customer Number</th>
+        <th>Emoji</th>
+      </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+  </table>
 </div>
 </body>
 </html>
