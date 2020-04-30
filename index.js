@@ -59,7 +59,7 @@ app.route('/getAgents')
 app.route('/getCustomers')
   .get(getCustomers);
 
-  function addAgent(request, response){
+function addAgent(request, response){
   let agentName = request.body['agentName'];
   let agentNumber = request.body['agentNum'];
   redisClient.hmset('agents:' + agentNumber, 'agentName', agentName, "availability", "unavailable", 'agentNumber', agentNumber)
@@ -81,7 +81,7 @@ async function getAgents(request, response){
   for(i = 0; i < agents.length; i++){
     entry = agents[i];
     await redisClient.hgetallAsync(entry).then(function(agent){
-      ret.push({name:agent['agentName'], availability:agent['availability'], number:agent['agentNumber']})
+      ret.push({name:agent['agentName'], availability:agent['availability'], number:agent['agentNumber'].replace(/.(?=.{3,}$)/g, '*')})
     }).catch(function(e){
       console.log(e)
     })
@@ -102,7 +102,7 @@ async function getCustomers(req,resp){
     entry = customers[i];
     await redisClient.hgetallAsync(entry).then(function(customer){
       if(customer['agentNum']!=''){
-        ret.push({assignedAgentNum:customer['agentNum'], emoji:customer['emoji'], customerNumber:entry.split(':')[1]});
+        ret.push({assignedAgentNum:customer['agentNum'].replace(/.(?=.{3,}$)/g, '*'), emoji:customer['emoji'], customerNumber:entry.split(':')[1].replace(/.(?=.{3,}$)/g, '*')});
       }        
     })
   }
