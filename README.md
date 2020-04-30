@@ -22,7 +22,7 @@ This is a basic demo app routing user enquiries to customer service people, all 
 6. Fill in `AGENT_NUM` and `AGENT_NUM2` with the numbers you'd like to act as Agents
 7. Run `npm start` in your terminal
 
-# Set up the application on Heroku
+## Set up the application on Heroku
 
 1. Create a Heroku Application, and deploy the contents of this repo to it.
 2. Add the "Heroku Redis" add-on (the hobby level is fine for testing)
