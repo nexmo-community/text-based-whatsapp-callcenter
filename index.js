@@ -1,11 +1,12 @@
 const express = require('express')
+const bluebird = require('bluebird');
 const bodyParser = require('body-parser')
 const Nexmo = require('nexmo')
 const path = require('path')
-const redis = require('redis')
+const redis = bluebird.promisifyAll(require('redis'))
 require('dotenv').config();
 const PORT = process.env.PORT || 5000
-const redisClient = redis.createClient(process.env.REDIS_URL);
+const redisClient = bluebird.promisifyAll(redis.createClient(process.env.REDIS_URL));
 const nexmo = new Nexmo({
   apiKey: process.env.NEXMO_API_KEY,
   apiSecret: process.env.NEXMO_API_SECRET,
@@ -15,18 +16,8 @@ const nexmo = new Nexmo({
   apiHost:'messages-sandbox.nexmo.com'
 }
 );
-const agentNum = process.env.AGENT_NUM
-const agentNum2 = process.env.AGENT_NUM2
 
 const CUSTOMERS = '_customers';
-// for the moment agent's must be pre-seeded
-if(agentNum)
-{
-  redisClient.hmset('agents:' + agentNum, "availability", "unavailable")
-}
-if (agentNum2){
-  redisClient.hmset('agents:' + agentNum2, "availability", "unavailable")
-}
 
 const emojis = ['🏠','🍎','🥑', '🌳', '🎪','🌈']
 
@@ -58,6 +49,42 @@ app
   .route('/webhooks/msg-event')
   .get(handleStatus)
   .post(handleStatus);
+
+app.route('/addAgent')
+  .post(addAgent);
+
+app.route('/getAgents')
+  .get(getAgents);
+
+function addAgent(request, response){
+  let agentName = request.body['agentName'];
+  let agentNumber = request.body['agentNum'];
+  redisClient.hmset('agents:' + agentNumber, 'agentName', agentName, "availability", "unavailable", 'agentNumber', agentNumber)
+  const params = Object.assign(request.query, request.body);
+  console.log(params);
+  response.status(200).redirect('/');
+}
+
+async function getAgents(request, response){
+  let ret = []
+  let agents = []
+
+  await redisClient.keysAsync("agents:*").then(function(theAgents){    
+    agents = theAgents;    
+  }).catch(function(e){
+    console.log(e)
+  })
+
+  for(i = 0; i < agents.length; i++){
+    entry = agents[i];
+    await redisClient.hgetallAsync(entry).then(function(agent){
+      ret.push({name:agent['agentName'], availability:agent['availability'], number:agent['agentNumber']})
+    }).catch(function(e){
+      console.log(e)
+    })
+  }
+  response.json(ret);  
+}
 
 /**
  * This looks to see if there is already a user record for the from number
@@ -103,7 +130,7 @@ function handleInboundFromCustomer(messageBody){
       console.log(err)
     }
     else{      
-      if(!user){
+      if(!user || user['agent'] == ''){
         redisClient.spop('available',(err,reply)=>{
           if(err){
             console.log(err)
