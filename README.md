@@ -4,6 +4,8 @@
 
 This is a basic demo app routing user enquiries to customer service people, all via WhatsApp
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 ## Prerequisites
 
 * A Nexmo account, [sign up for a new account here](https://dashboard.nexmo.com/sign-up?utm_source=DEV_REL&utm_medium=github&utm_campaign=text-based-whatsapp-callcenter) if you don't have one already
@@ -21,7 +23,12 @@ This is a basic demo app routing user enquiries to customer service people, all 
 5. Add your configuration values to the `.env` file, this will include the connection details for your Redis instance and your Nexmo credentials including an application and private key. The private key should be pasted on one line with all newlines replaced with `\n`
 6. Run `npm start` in your terminal
 
-## Set up the application on Heroku
+
+## Manual Heroku Setup
+
+You can deploy this app with the button: [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+If you'd prefer to do this yourself or change something, this is the basic setup process:
 
 1. Create a Heroku Application, and deploy the contents of this repo to it.
 2. Add the "Heroku Redis" add-on (the hobby level is fine for testing)
