@@ -1,8 +1,22 @@
 {
-  "name": "Start on Heroku: Node.js",
-  "description": "A barebones Node.js app using Express 4",
-  "repository": "https://github.com/heroku/node-js-getting-started",
-  "logo": "https://cdn.rawgit.com/heroku/node-js-getting-started/master/public/node.svg",
-  "keywords": ["node", "express", "heroku"],
-  "image": "heroku/nodejs"
+  "name": "Text-based Call Center App with WhatsApp",
+  "description": "A Vonage Messages API demo, using the Messages API Sandbox",
+  "repository": "https://github.com/nexmo-community/text-based-whatsapp-callcenter",
+  "keywords": ["whatsapp", "node", "heroku", "nexmo", "vonage", "emoji"],
+  "image": "heroku/nodejs",
+  "env": {
+    "NEXMO_API_KEY": {
+        "description": "Find your account API key and secret on the dashboard https://dashboard.nexmo.com"
+    },
+    "NEXMO_API_SECRET": {
+        "description": "Find your account API key and secret on the dashboard https://dashboard.nexmo.com"
+    },
+    "NEXMO_APPLICATION_ID": {
+        "description": "Create an application in the dashboard and put its ID here"
+    },
+    "NEXMO_APPLICATION_PRIVATE_KEY": {
+        "description": "Application private key with \n replacing newlines"
+    }
+
+  }
 }

@@ -19,8 +19,7 @@ This is a basic demo app routing user enquiries to customer service people, all 
 3. Clone this repo, and run `npm install`
 4. Copy the `.env.example` file to `.env`
 5. Add your configuration values to the `.env` file, this will include the connection details for your Redis instance and your Nexmo credentials including an application and private key. The private key should be pasted on one line with all newlines replaced with `\n`
-6. Fill in `AGENT_NUM` and `AGENT_NUM2` with the numbers you'd like to act as Agents
-7. Run `npm start` in your terminal
+6. Run `npm start` in your terminal
 
 ## Set up the application on Heroku
 
@@ -30,10 +29,8 @@ This is a basic demo app routing user enquiries to customer service people, all 
 4. If you are using the Messages Sandbox, then also configure the sandbox URLs for Messages to point to (the same URLs as used in the application) `[APP URL]/webhooks/inbound` and `[APP_URL]/webhooks/status` respectively.
 5. Back on Heroku, under "Settings" set the "Config vars". These will be as named in the `.env.example` file:
  * Your Nexmo credentials and application information
- * The phone number of one or two "agents"
  * Note that the private key should be a string with `\n` for newlines
  * No need to set the `REDIS_URL` for Heroku, the add-on does that for you
-
 
 ## Using the app
 
