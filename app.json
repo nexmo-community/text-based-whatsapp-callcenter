@@ -4,6 +4,7 @@
   "repository": "https://github.com/nexmo-community/text-based-whatsapp-callcenter",
   "keywords": ["whatsapp", "node", "heroku", "nexmo", "vonage", "emoji"],
   "image": "heroku/nodejs",
+  "add-ons": [ "heroku-redis:hobby-dev"],
   "env": {
     "NEXMO_API_KEY": {
         "description": "Find your account API key and secret on the dashboard https://dashboard.nexmo.com"
