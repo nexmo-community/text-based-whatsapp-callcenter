@@ -1,51 +1,81 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-  <script src="/js/main.js"></script>  
-  <link rel="stylesheet" type="text/css" href="/stylesheets/styles.css">  
-</head>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css"
+    />
+  </head>
 
-<body>
-  <header>
-    <h1>WhatsApp Contact Center Dashboard</h1>
-  </header>
-  
-  <h2>Add A new Agent</h2>
-  <form name="agentForm" action="/addAgent" method="POST">
-    <input type="text" name="agentNum" id="agentNum" placeholder="Agent Number">
-    <input type="text" name="agentName" id="agentName" placeholder="Agent Name">
-    <br/>
-    <input type="submit" value="Add Agent">
-  </form>
-  <h2>Currently Registered Agents</h2>
-  <div style="overflow-y: auto;">
-    <table id="agentTable">
-      <thead>
-        <tr>        
-          <th>Agent Name</th>
-          <th>Agent Number</th>
-          <th>Availability</th>                
-      </tr>
-      </thead>
-      <tbody>
-      </tbody>      
-    </table>
-</div>
-<h2>Customers Currently Being Helped</h2>
-<div style="overflow-y: auto;">
-  <table id="customersTable">
-    <thead>
-      <tr>
-        <th>Agent Number</th>
-        <th>Customer Number</th>
-        <th>Emoji</th>
-      </tr>
-    </thead>
-    <tbody>
+  <body>
+    <div class="container">
+      <div class="row">
+        <header><h1>WhatsApp Contact Center Dashboard</h1></header>
+      </div>
+      <div class="row">
+        <p class="error" style="color: red;">
+          The agent name and number cannot be empty.
+        </p>
+      </div>
+      <div class="row">
+        <h4>Add a New Agent</h4>
+        <form name="agentForm" action="/addAgent" method="POST">
+          <input
+            type="text"
+            name="agentNum"
+            id="agentNum"
+            placeholder="Agent Phone Number"
+          />
 
-    </tbody>
-  </table>
-</div>
-</body>
+          <input
+            type="text"
+            name="agentName"
+            id="agentName"
+            placeholder="Agent Name"
+          />
+          <input
+            type="submit"
+            id="addAgentButton"
+            class="button-primary"
+            value="Add Agent"
+          />
+        </form>
+      </div>
+      <div class="row">
+        <div class="one-half column">
+          <h4>Currently Registered Agents</h4>
+          <div style="overflow-y: auto;">
+            <table id="agentTable">
+              <thead>
+                <tr>
+                  <th>Agent Name</th>
+                  <th>Agent Number</th>
+                  <th>Availability</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="one-half column">
+          <h4>Customers Currently Being Helped</h4>
+          <div style="overflow-y: auto;">
+            <table id="customersTable">
+              <thead>
+                <tr>
+                  <th>Agent Number</th>
+                  <th>Customer Number</th>
+                  <th>Emoji</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="/js/main.js"></script>
+  </body>
 </html>

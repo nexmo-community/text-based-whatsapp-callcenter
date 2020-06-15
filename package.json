@@ -1,14 +1,15 @@
 {
-  "name": "node-js-getting-started",
+  "name": "callcenter-example",
   "version": "0.3.0",
-  "description": "A sample Node.js app using Express 4",
+  "description": "A sample application built with Node.js that demonstrates using the Vonage Messages API Sandbox with WhatsApp to build a text based callcenter.",
   "engines": {
     "node": "12.x"
   },
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
@@ -21,17 +22,19 @@
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
+    "nodemon": "^2.0.4",
     "request": "^2.81.0",
     "tape": "^4.7.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/heroku/node-js-getting-started"
+    "url": "https://github.com/nexmo-community/text-based-whatsapp-callcenter"
   },
   "keywords": [
     "node",
-    "heroku",
-    "express"
+    "whatsapp",
+    "express",
+    "vonage"
   ],
   "license": "MIT"
 }
