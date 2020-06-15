@@ -1,5 +1,5 @@
 {
-  "name": "Vonage API Text Based WhatsApp Callcenter Example",
+  "name": "callcenter-example",
   "version": "0.3.0",
   "description": "A sample application built with Node.js that demonstrates using the Vonage Messages API Sandbox with WhatsApp to build a text based callcenter.",
   "engines": {
